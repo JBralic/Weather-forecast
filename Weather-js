@@ -1,0 +1,88 @@
+// global variables
+
+
+
+
+
+
+//api info
+
+var weatherApi = ''
+
+
+//enter city, click button -- need an event listener
+
+
+
+//type = click, need to validate the input through a function
+
+function inputhandler() {
+    if (searchInputEl.value === "") {
+        return
+    }
+
+var search = searchInputEl.value.trim();
+getGeoCoords(search)
+searchInputEl.InnerHTML = ''
+
+    //then go to first fetch function geo
+}
+
+
+
+//geo function -- first fetch to get the city coordinates
+
+function getGeoCoords(search) {
+    var geoApi = 'http://api.openweathermap.org/geo/1.0/direct?q=${search}&limit=5&appid=${API key}'
+    fetch(geoApi)
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (data) {
+            // Make sure to look at the response in the console and read the 404 response
+            console.log(data[0]);
+        
+            getWeather(data[0])
+        });
+}
+
+//Weather function - 2nd fetch - use from geoApi, lat, lon, and I need the carry the name of the city
+function getWeather(location) {
+var { lat, lon } = location
+var city = location.name
+
+    var weatherApi = 'http://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API key}'
+    fetch(geoApi)
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (data) {
+            console.log(data);
+            displayWeather(data, city)
+        });
+}
+
+//fetched weather -- using a function to host two other functions to be able to carry the data to both uniquely
+
+function displayWeather(data, city) {
+    currentDisplay(data.list[0], city)
+    forecastDisplay(data.list)
+}
+
+
+function forecastDisplay(forecast ) {
+    var forecastTitleEl = document.getElementById('forecastTitle')
+    forecastTitleEl.textContent = "Five Day Forecast"
+
+    for (let index = 0; index < forecast.length; i++) {
+        var forecast = forecast[i]
+        forecastCard(forecast)
+
+    }
+}
+function forecastCard(forecast){
+    var temp = forecast.main.temp
+    //create card - copy card layout from currentDisplay
+    var card = document.createElement('div')
+    card.setAttribute('class', 'card')
+}
