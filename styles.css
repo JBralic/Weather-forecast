@@ -1,0 +1,78 @@
+:root {
+  --purple: rgb(53, 33, 143);
+}
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
+.header {
+  color: white;
+  background-color: var(--purple);
+  padding: 5px;
+}
+
+.header h1 {
+  text-align: center;
+}
+
+.searchSection {
+  padding-bottom: 20px;
+  margin: 10px;
+  border-bottom: 2px solid grey;
+}
+
+.input {
+  padding: 3px;
+  margin-bottom: 10px;
+}
+
+.search-button {
+  padding: 2px;
+  margin-top: 10px;
+}
+
+.history {
+  margin: 10px;
+}
+
+.search-history {
+  padding: 0px 0px 10px 0px;
+  margin: 10px 0px 10px 10px;
+  border-bottom: 2px solid grey;
+}
+
+.historyButton {
+  border-radius: 5px;
+  margin-left: 10px;
+  margin-bottom: 10px;
+}
+
+.clear {
+  margin: 10px;
+}
+
+.col-10 {
+  margin: 20px 0px;
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.main-weather {
+  border: solid rgb(0, 0, 0) 1px;
+  background-color: rgb(46, 52, 80);
+  color: white;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+.five-day {
+  border: solid rgb(0, 0, 0) 1px;
+  background-color: rgb(46, 52, 80);
+  color: white;
+  margin: 10px 0px;
+  padding: 10px;
+}
