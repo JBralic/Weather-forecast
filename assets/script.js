@@ -1,146 +1,102 @@
-var apiKey = '0e584d18f4751753861bc60159e5582b';
+const API_KEY = '0e584d18f4751753861bc60159e5582b';
+const formElement = document.getElementById('submitForm');
 
-var formEl = document.getElementById('submitForm');
-
-formEl.addEventListener('submit', function (event) {
-  var city = document.getElementById('query').value;
+formElement.addEventListener('submit', event => {
   event.preventDefault();
-  getLatLon(city);
+  const city = document.getElementById('query').value;
+  fetchWeatherData(city);
 });
 
-function getLatLon(city) {
-  var QueryUrl =
-    'https://api.openweathermap.org/geo/1.0/direct?q=' +
-    city +
-    '&limit=&appid=' +
-    apiKey;
-
-  fetch(QueryUrl)
-    .then(function (response) {
-      if (!response.ok) {
-        throw response.json();
-      }
-      console.log(response);
-      return response.json();
-    })
-    .then(function (data) {
-      getForecast(data[0].lat, data[0].lon);
-      getCurrent(data[0].lat, data[0].lon);
-    });
+async function fetchWeatherData(city) {
+  try {
+    const geoData = await fetchGeoData(city);
+    const { lat, lon } = geoData[0];
+    const [forecastData, currentWeatherData] = await Promise.all([
+      fetchForecastData(lat, lon),
+      fetchCurrentWeatherData(lat, lon)
+    ]);
+    updateForecast(forecastData);
+    updateCurrentWeather(currentWeatherData);
+    addToHistory(city);
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+  }
 }
 
-function getForecast(lat, lon) {
-  var url =
-    'https://api.openweathermap.org/data/2.5/forecast?lat=' +
-    lat +
-    '&lon=' +
-    lon +
-    '&appid=' +
-    apiKey +
-    '&units=metric';
-
-  fetch(url)
-    .then(function (response) {
-      if (!response.ok) {
-        throw response.json();
-      }
-      console.log(response);
-      return response.json();
-    })
-    .then(function (data) {
-      console.log(data);
-      updateForecast(data);
-    });
+async function fetchGeoData(city) {
+  const queryUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=&appid=${API_KEY}`;
+  const response = await fetch(queryUrl);
+  if (!response.ok) {
+    throw new Error('Failed to fetch geo data');
+  }
+  return response.json();
 }
 
-function getCurrent(lat, lon) {
-  var url =
-    'https://api.openweathermap.org/data/2.5/weather?lat=' +
-    lat +
-    '&lon=' +
-    lon +
-    '&appid=' +
-    apiKey +
-    '&units=metric';
-
-  fetch(url)
-    .then(function (response) {
-      if (!response.ok) {
-        throw response.json();
-      }
-      console.log(response);
-      return response.json();
-    })
-    .then(function (data) {
-      updateCurrentWeather(data);
-      addToHistory(data.name);
-    });
+async function fetchForecastData(lat, lon) {
+  const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Failed to fetch forecast data');
+  }
+  return response.json();
 }
 
-function addToHistory(name) {
-  const storageData = JSON.parse(localStorage.getItem('searchHistory'));
-  if (!storageData || storageData.length === 0) {
-    localStorage.setItem('searchHistory', JSON.stringify([name]));
-  } else if (storageData.length > 0 && !storageData.includes(name)) {
-    storageData.push(name);
-    localStorage.setItem('searchHistory', JSON.stringify(storageData));
-  } else {
-    var filteredData = storageData.filter(function (entry) {
-      return entry !== name;
-    });
-    console.log(filteredData);
-    filteredData.push(name);
-    localStorage.setItem('searchHistory', JSON.stringify(filteredData));
+async function fetchCurrentWeatherData(lat, lon) {
+  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Failed to fetch current weather data');
+  }
+  return response.json();
+}
+
+function addToHistory(city) {
+  let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
+  if (!searchHistory.includes(city)) {
+    searchHistory.push(city);
+    localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
   }
   displaySearchHistory();
 }
-displaySearchHistory();
 
 function displaySearchHistory() {
-  const storageData = JSON.parse(localStorage.getItem('searchHistory'));
-  var searchHistory = document.getElementById('history');
-  searchHistory.innerHTML = '';
-  for (var i = 0; i < storageData.length; i++) {
-    var button = document.createElement('button');
-    button.textContent = storageData[i];
-    button.setAttribute('class', 'col-12 historyButton');
-    searchHistory.prepend(button);
-    button.addEventListener('click', function (e) {
-      console.log('clicked on', e.target.textContent);
-      getLatLon(e.target.textContent);
-    });
-  }
+  const searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
+  const historyContainer = document.getElementById('history');
+  historyContainer.innerHTML = '';
+  searchHistory.forEach(city => {
+    const button = document.createElement('button');
+    button.textContent = city;
+    button.classList.add('col-12', 'history-button');
+    button.addEventListener('click', () => fetchWeatherData(city));
+    historyContainer.prepend(button);
+  });
 }
 
 function updateCurrentWeather(currentWeather) {
-  var city = document.getElementById('currentCity');
-  city.textContent = currentWeather.name;
-  var date = document.getElementById('currentDate');
-  date.textContent = new Date(currentWeather.dt * 1000).toLocaleDateString();
-  var icon = document.getElementById('currentIcon');
-  icon.src = `https://openweathermap.org/img/wn/${currentWeather.weather[0].icon}@2x.png;`;
-  var temp = document.getElementById('currentTemp');
-  temp.textContent = currentWeather.main.temp;
-  var wind = document.getElementById('currentWind');
-  wind.textContent = currentWeather.wind.speed;
-  var humidity = document.getElementById('currentHumidity');
-  humidity.textContent = currentWeather.main.humidity;
+  const { name, dt, weather, main, wind } = currentWeather;
+  document.getElementById('currentCity').textContent = name;
+  document.getElementById('currentDate').textContent = new Date(dt * 1000).toLocaleDateString();
+  document.getElementById('currentIcon').src = `https://openweathermap.org/img/wn/${weather[0].icon}.png`;
+  document.getElementById('currentTemp').textContent = main.temp;
+  document.getElementById('currentWind').textContent = wind.speed;
+  document.getElementById('currentHumidity').textContent = main.humidity;
 }
 
 function updateForecast(forecast) {
-  var cards = document.getElementById('cards');
-  cards.innerHTML = '';
-  for (var i = 2; i < forecast.list.length; i += 8) {
-    console.log(forecast.list[i]);
-    var outerDiv = document.createElement('div');
+  const cardsContainer = document.getElementById('cards');
+  cardsContainer.innerHTML = '';
+  for (let i = 2; i < forecast.list.length; i += 8) {
+    const outerDiv = document.createElement('div');
     outerDiv.classList.add('col-2', 'five-day');
-    outerDiv.innerHTML = ` 
+    outerDiv.innerHTML = `
       <h5>${new Date(forecast.list[i].dt * 1000).toLocaleDateString()}</h5>
       <img src="${`https://openweathermap.org/img/wn/${forecast.list[i].weather[0].icon}@2x.png`}" alt="icon">
       <p>Temp: ${forecast.list[i].main.temp}</p>
       <p>Wind: ${forecast.list[i].wind.speed}</p>
       <p>Humidity: ${forecast.list[i].main.humidity}</p>
       `;
-    cards.append(outerDiv);
+    cardsContainer.append(outerDiv);
   }
 }
+
+displaySearchHistory();
